@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <chrono>
 #include <thread>
 
 struct Timer
@@ -19,13 +17,25 @@ struct Timer
 				callable();
 				this->stopped_ = true;
 			}
-			});
+		});
 		thr.detach();
 	}
 
 	template<typename Callable, typename Period>
 	void callWithPeriod(Callable callable, Period period) {
-		// TODO
+		stopped_ = false;
+		std::thread thr([=]() {
+			while (!this->stopped_) {
+				std::this_thread::sleep_for(period);
+				if (this->stopped_) {
+					// Just stop in case the task was canceled
+					// during the wait.
+					return;
+				}
+				callable();
+			}
+		});
+		thr.detach();
 	}
 
 	void stop() {
@@ -36,7 +46,8 @@ struct Timer
 	}
 
 private:
+	// The stop flag does not have to be an atomic object to protect
+	// it from data races. The only possible conflict could happen
+	// when the timer is stopped right after starting it.
 	bool stopped_ = true;
-
 };
-
