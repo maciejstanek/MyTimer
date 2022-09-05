@@ -5,6 +5,8 @@ VisualStudioVersion = 17.3.32825.248
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyTimer", "MyTimer\MyTimer.vcxproj", "{5789D8E7-E419-4E2E-B52F-C1FDACB81562}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyTimerTest", "MyTimerTest\MyTimerTest.vcxproj", "{6FD924D3-26FB-4952-83DB-60DE41E1E12C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{5789D8E7-E419-4E2E-B52F-C1FDACB81562}.Release|x64.Build.0 = Release|x64
 		{5789D8E7-E419-4E2E-B52F-C1FDACB81562}.Release|x86.ActiveCfg = Release|Win32
 		{5789D8E7-E419-4E2E-B52F-C1FDACB81562}.Release|x86.Build.0 = Release|Win32
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Debug|x64.ActiveCfg = Debug|x64
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Debug|x64.Build.0 = Debug|x64
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Debug|x86.ActiveCfg = Debug|Win32
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Debug|x86.Build.0 = Debug|Win32
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Release|x64.ActiveCfg = Release|x64
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Release|x64.Build.0 = Release|x64
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Release|x86.ActiveCfg = Release|Win32
+		{6FD924D3-26FB-4952-83DB-60DE41E1E12C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
