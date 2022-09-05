@@ -24,6 +24,13 @@ struct Timer
 	template<typename Callable, typename Period>
 	void callWithPeriod(Callable callable, Period period) {
 		stopped_ = false;
+		// The following approach has the unintended consequence
+		// that the period is always increased by the execution
+		// time of the callback and the following lambda. The
+		// best would be relegate the callable call to another
+		// detached thread so that we can immediatally enter
+		// sleep_for again. On the other hand it might be too
+		// thread-intense. To investigate.
 		std::thread thr([=]() {
 			while (!this->stopped_) {
 				std::this_thread::sleep_for(period);
