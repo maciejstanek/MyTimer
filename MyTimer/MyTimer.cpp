@@ -1,11 +1,36 @@
-// MyTimer.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+
+#include "Timer.h"
+
+void exampleCall() {
+    std::cout << "Bazinga! Hellow from the timer!\n";
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    using namespace std::chrono_literals;
+    using std::this_thread::sleep_for;
+    Timer timer;
+
+    std::cout << "Example 2s delay over 4s in the main thread:\n";
+    timer.callWithDelay(exampleCall, 2s);
+    sleep_for(3s);
+    std::cout << "Example from the main thread.\n";
+
+    std::cout << "\nExample stop:\n";
+    timer.callWithDelay(exampleCall, 2s);
+    sleep_for(1s);
+    timer.stop();
+    std::cout << "Has anything happened? Waiting three secs just to make sure.\n";
+    sleep_for(3s);
+    std::cout << "Still nothing.\n";
+
+    std::cout << "\nExample short period:\n";
+    timer.callWithDelay(exampleCall, 100ms);
+    sleep_for(1s);
+    std::cout << "Whoa, that was fast!\n";
+
+    return 0;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
