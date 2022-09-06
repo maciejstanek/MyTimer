@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <type_traits>
+#include <stdexcept>
 
 namespace {
 	// Attribution: https://stackoverflow.com/questions/41850985/check-if-a-template-parameter-is-some-type-of-chronoduration
@@ -15,6 +16,9 @@ namespace {
 
 struct Timer
 {
+	struct AlreadyStarted : public std::runtime_error {
+		AlreadyStarted() : std::runtime_error("Restarting the timer is not allowed") {};
+	};
 	// I have allowed myself to play around with enable_if.
 	// This was not necessary for this task but making such
 	// quasi contracts might be a good idea to implement for
@@ -23,6 +27,10 @@ struct Timer
 		typename std::enable_if < std::is_invocable<Callable>{}, bool > ::type = true,
 		typename std::enable_if < is_duration<Delay>{}, bool > ::type = true >
 	void callWithDelay(Callable callable, Delay delay) {
+		if (started_) {
+			throw AlreadyStarted{};
+		}
+		started_ = true;
 		stopped_ = false;
 		// We need to pass the callable by value and not by
 		// reference since it will be called in another thread.
@@ -42,6 +50,10 @@ struct Timer
 		typename std::enable_if < std::is_invocable<Callable>{}, bool > ::type = true,
 		typename std::enable_if < is_duration<Period>{}, bool > ::type = true >
 	void callWithPeriod(Callable callable, Period period) {
+		if (started_) {
+			throw AlreadyStarted{};
+		}
+		started_ = true;
 		stopped_ = false;
 		// The following approach has the unintended consequence
 		// that the period is always increased by the execution
@@ -76,4 +88,7 @@ private:
 	// it from data races. The only possible conflict could happen
 	// when the timer is stopped right after starting it.
 	bool stopped_ = true;
+	// A separate flag has to be stored to prevent the user from
+	// scheduling another task.
+	bool started_ = false;
 };
