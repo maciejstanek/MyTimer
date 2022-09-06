@@ -45,6 +45,10 @@ This solution has two subprojects:
  * MyTimerTest - a separate container for the timer unit tests implemented
    with Google Test.
 
+### To investigate
+
+ * What will happen when the timer goes out of scope? Will a task be stopped?
+
 ### Other considered approaches
 
  * Create a pure interafce for a timer (`setDelay`, `setCallback`,
