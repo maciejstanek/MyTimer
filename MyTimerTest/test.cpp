@@ -10,7 +10,6 @@ using std::this_thread::sleep_for;
 TEST(PlainTimer, Precision) {
 	constexpr auto runTime = 3ms;
 	constexpr auto precision = 1ms;
-	static_assert(precision < runTime, "The timer run time must be longer than the tested timer precision");
 	auto value = false;
 	const auto setValue = [&value]() { value = true; };
 	Timer timer;
