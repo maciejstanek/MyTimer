@@ -40,8 +40,10 @@ This is not an optimal timer class. The major problem is that every timer
 sets up its own thread and this could lead to 
 
 This solution has two subprojects:
- * MyTimer - the timer implementation and a console app with the timer usage example.
- * MyTimerTest - a separate container for unit tests implemented with Google Test.
+ * MyTimer - the timer implementation and a console app with the timer
+   usage examples.
+ * MyTimerTest - a separate container for the timer unit tests implemented
+   with Google Test.
 
 ### Other considered approaches
 
