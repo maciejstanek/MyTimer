@@ -21,23 +21,21 @@
 
 ### Solution description
 
-As requested, I provided a single *timer* data type with two modes
-of operation: a delayed action and and a periodic action. Based
-on the desciption of the stop behavior I decided that a single
-timer instance must be responsible for a single callback at a time.
-I also assumed that the timer must not block the main execution
-thread - so no busy loop allowed.
+As requested, I provided a single *timer* data type with two exclusive
+modes of operation: a delayed action and a periodic action. I assumed
+that the timer must not block the main execution thread. The timer can
+be restarted in a different mode, with a different callback and period.
+The only restriction is that one timer can manage one callback at a time.
 
-I decided that the timer can not be restarted with a different action
-in a different mode, even after manually stopping it. This is because
-stopping a task and then immedietally starting another one will either
-result in both tasks working concurrently (for two recurring tasks) or
-only the faster one completing (for two one-shot tasks). This is because
-starting the timer always clears the stopped flag which is shared between
-worker threads.
+The timer will join the worker thread on its destruction. This
+is not ideal, since every time the timer goes out of scope, the calling
+thread would be blocked. I would suggest to store timer instances in some
+sort of extrernal heap-allocated object.
 
-This is not an optimal timer class. The major problem is that every timer
-sets up its own thread and this could lead to 
+This is not an optimal timer class in terms of performance either. The major
+problem is that every timer sets up its own thread and this could lead
+to too many threads running on the system. If multiple timers are needed,
+some sort of an event-loop would be a better solution.
 
 This solution has two subprojects:
  * MyTimer - the timer implementation and a console app with the timer
@@ -45,15 +43,12 @@ This solution has two subprojects:
  * MyTimerTest - a separate container for the timer unit tests implemented
    with Google Test.
 
-### To investigate
-
- * What will happen when the timer goes out of scope? Will a task (especially
-   the recurring task) be stopped?
-    * [Stack Overflow answer.](https://stackoverflow.com/questions/19744250/what-happens-to-a-detached-thread-when-main-exits)
-
 ### Other considered approaches
 
- * Create a pure interafce for a timer (`setDelay`, `setCallback`,
+ * Use `thread::detach` to dispatch the callbacks.
+    - It might crash once the main thread finishes but there are
+      still some detached threads running.
+ * Create a pure interafce for the timer (`setDelay`, `setCallback`,
    `stop`, `start`) and implement two distinct classes over this
    interface, one for periodical calls, and one for single calls.
     - Dismissed, because the spec specifically request a single
@@ -69,7 +64,6 @@ This solution has two subprojects:
 ## Homework
 
 Here are my answers to the homework suggested during the interiew.
-
 
 ### What is a semaphore and how is it different from a mutex?
 
