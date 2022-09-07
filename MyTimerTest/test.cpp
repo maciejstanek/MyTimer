@@ -63,5 +63,25 @@ TEST(Timer, PeriodicalStop) {
 	EXPECT_EQ(counter, expectedCallCount);
 }
 
-// TODO: test the one use exception
-// TODO: test hasStarted
+TEST(Timer, RestartThrow) {
+	constexpr auto stopTime = 2ms;
+	const auto action = [](){};
+	Timer timer;
+	timer.callWithPeriod(action, 2 * stopTime);
+	sleep_for(stopTime);
+	timer.stop();
+	EXPECT_THROW(timer.callWithPeriod(action, stopTime), Timer::AlreadyStarted);
+	EXPECT_THROW(timer.callWithDelay(action, stopTime), Timer::AlreadyStarted);
+}
+
+TEST(Timer, HasStarted) {
+	constexpr auto runTime = 2ms;
+	const auto action = []() {};
+	Timer timer;
+	EXPECT_FALSE(timer.hasStarted());
+	timer.callWithPeriod(action, 2 * runTime);
+	sleep_for(runTime);
+	EXPECT_TRUE(timer.hasStarted());
+	sleep_for(2 * runTime);
+	EXPECT_TRUE(timer.hasStarted());
+}
