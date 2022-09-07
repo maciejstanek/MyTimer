@@ -7,64 +7,35 @@
 using namespace std::chrono_literals;
 using std::this_thread::sleep_for;
 
-TEST(Timer, OneShotPrecision) {
-	constexpr auto runTime = 20ms;
-	constexpr auto precision = 10ms;
+class TimerDelay : public ::testing::Test {
+protected:
+	auto runTime() { return 20ms; }
+	auto precision() { return 10ms; }
+};
+TEST_F(TimerDelay, Precision) {
 	auto value = false;
 	const auto setValue = [&value]() { value = true; };
 	Timer timer;
-	timer.callWithDelay(setValue, runTime);
-	sleep_for(runTime - precision);
+	timer.callWithDelay(setValue, runTime());
+	sleep_for(runTime() - precision());
 	EXPECT_FALSE(value) << "too early";
-	sleep_for(2 * precision);
+	sleep_for(2 * precision());
 	EXPECT_TRUE(value) << "too late";
 }
 
-TEST(Timer, OneShotStop) {
-	constexpr auto runTime = 20ms;
-	constexpr auto precision = 10ms;
+TEST_F(TimerDelay, Stop) {
 	auto done = false;
 	const auto action = [&done]() { done = true; };
 	Timer timer;
-	timer.callWithDelay(action, runTime);
-	sleep_for(runTime - precision);
+	timer.callWithDelay(action, runTime());
+	sleep_for(runTime() - precision());
 	timer.stop();
 	EXPECT_FALSE(done) << "false start";
-	sleep_for(2 * precision);
+	sleep_for(2 * precision());
 	EXPECT_FALSE(done) << "stop failed";
 }
 
-TEST(Timer, PeriodicalPrecision) {
-	constexpr auto oneTick = 200ms;
-	// TODO #1: The timer precision is impacted significantly by the
-	// run time of the callback, leading to increased period.
-	constexpr auto expectedCallCount = 10;
-	constexpr auto fullTime = (expectedCallCount + 0.5) * oneTick;
-	auto counter = 0;
-	const auto tickOnce = [&counter]() { ++counter; };
-	Timer timer;
-	timer.callWithPeriod(tickOnce, oneTick);
-	sleep_for(fullTime);
-	EXPECT_EQ(counter, expectedCallCount);
-}
-
-TEST(Timer, PeriodicalStop) {
-	constexpr auto oneTick = 200ms;
-	// TODO #1: The timer precision is impacted significantly by the
-	// run time of the callback, leading to increased period.
-	constexpr auto expectedCallCount = 10;
-	constexpr auto fullTime = (expectedCallCount + 0.5) * oneTick;
-	auto counter = 0;
-	const auto tickOnce = [&counter]() { ++counter; };
-	Timer timer;
-	timer.callWithPeriod(tickOnce, oneTick);
-	sleep_for(fullTime);
-	timer.stop();
-	sleep_for(expectedCallCount * oneTick);
-	EXPECT_EQ(counter, expectedCallCount);
-}
-
-TEST(Timer, IsRunning) {
+TEST_F(TimerDelay, IsRunning) {
 	constexpr auto runTime = 10ms;
 	const auto action = []() {};
 	Timer timer;
@@ -74,4 +45,31 @@ TEST(Timer, IsRunning) {
 	EXPECT_TRUE(timer.isRunning()) << "start failed";
 	sleep_for(2 * runTime);
 	EXPECT_TRUE(timer.isHalted()) << "stopped task not marked as stopped";
+}
+
+class TimerPeriodical : public ::testing::Test {
+protected:
+	auto oneTick() { return 40ms; }
+	auto expectedCallCount() { return 3; }
+	auto fullTime() { return (expectedCallCount() + 0.5) * oneTick(); }
+};
+
+TEST_F(TimerPeriodical, Precision) {
+	auto counter = 0;
+	const auto tickOnce = [&counter]() { ++counter; };
+	Timer timer;
+	timer.callWithPeriod(tickOnce, oneTick());
+	sleep_for(fullTime());
+	EXPECT_EQ(counter, expectedCallCount());
+}
+
+TEST_F(TimerPeriodical, Stop) {
+	auto counter = 0;
+	const auto tickOnce = [&counter]() { ++counter; };
+	Timer timer;
+	timer.callWithPeriod(tickOnce, oneTick());
+	sleep_for(fullTime());
+	timer.stop();
+	sleep_for(2 * oneTick());
+	EXPECT_EQ(counter, expectedCallCount());
 }

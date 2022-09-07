@@ -55,22 +55,23 @@ struct Timer
 		typename std::enable_if < is_duration<Period>{}, bool > ::type = true >
 	void callWithPeriod(Callable callable, Period period) {
 		prepareForNewTask();
-		// The following approach has the unintended consequence
-		// that the period is always increased by the execution
-		// time of the callback and the following lambda. The
-		// best would be relegate the callable call to another
-		// detached thread so that we can immediately enter
-		// sleep_for again. On the other hand it might be too
-		// thread-intense. To investigate.
 		thread_ = std::thread([=]() {
+			// Added an extra sleep at the beginning because
+			// I would expect this method to behave similarly
+			// to callWithDelay. This extra wait could not be
+			// cleanly achieved by reversing the actions in
+			// the loop (sleep vs callable), as this would require
+			// an ugly while(true) loop and an exit condition
+			// in the middle (even uglier).
+			auto cycle_end_time = std::chrono::steady_clock::now() + period;
+			std::this_thread::sleep_until(cycle_end_time);
 			while (this->isRunning()) {
-				std::this_thread::sleep_for(period);
-				if (this->isHalted()) {
-					// Just stop in case the task was canceled
-					// during the wait.
-					return;
-				}
 				callable();
+				std::this_thread::sleep_until(cycle_end_time);
+				// Need to calculate the end time before the loop
+				// condition is checked, because this check can
+				// have a significant run time.
+				cycle_end_time = std::chrono::steady_clock::now() + period;
 			}
 			});
 	}
