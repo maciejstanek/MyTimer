@@ -22,7 +22,6 @@ TEST_F(TimerDelay, Precision) {
 	sleep_for(2 * precision());
 	EXPECT_TRUE(value) << "too late";
 }
-
 TEST_F(TimerDelay, Stop) {
 	auto done = false;
 	const auto action = [&done]() { done = true; };
@@ -36,22 +35,21 @@ TEST_F(TimerDelay, Stop) {
 }
 
 TEST_F(TimerDelay, IsRunning) {
-	constexpr auto runTime = 10ms;
 	const auto action = []() {};
 	Timer timer;
 	EXPECT_TRUE(timer.isHalted()) << "new timer created running";
-	timer.callWithDelay(action, 2 * runTime);
-	sleep_for(runTime);
+	timer.callWithDelay(action, 2 * runTime());
+	sleep_for(runTime());
 	EXPECT_TRUE(timer.isRunning()) << "start failed";
-	sleep_for(2 * runTime);
+	sleep_for(2 * runTime());
 	EXPECT_TRUE(timer.isHalted()) << "stopped task not marked as stopped";
 }
 
 class TimerPeriodical : public ::testing::Test {
 protected:
-	auto oneTick() { return 40ms; }
-	auto expectedCallCount() { return 3; }
-	auto fullTime() { return (expectedCallCount() + 0.5) * oneTick(); }
+	auto oneTick() { return 20ms; }
+	auto expectedCallCount() { return 4; }
+	auto fullTime() { return (expectedCallCount() + 0.8) * oneTick(); }
 };
 
 TEST_F(TimerPeriodical, Precision) {
