@@ -4,6 +4,7 @@
 #include <chrono>
 #include <type_traits>
 #include <stdexcept>
+#include <atomic>
 
 namespace {
 	// Attribution: https://stackoverflow.com/questions/41850985/check-if-a-template-parameter-is-some-type-of-chronoduration
@@ -16,9 +17,15 @@ namespace {
 
 struct Timer
 {
-	struct AlreadyStarted : public std::runtime_error {
-		AlreadyStarted() : std::runtime_error("Restarting the timer is not allowed") {};
-	};
+	Timer() : started_{ false } {}
+	~Timer() {
+		// This should take care of the timer thread
+		// after the timer goes out of scope. Stopping
+		// is blocking, so it would be best to store
+		// the timer somewhere on the heap.
+		stop();
+	}
+
 	// I have allowed myself to play around with enable_if.
 	// This was not necessary for this task but making such
 	// quasi contracts might be a good idea to implement for
@@ -27,23 +34,24 @@ struct Timer
 		typename std::enable_if < std::is_invocable<Callable>{}, bool > ::type = true,
 		typename std::enable_if < is_duration<Delay>{}, bool > ::type = true >
 	void callWithDelay(Callable callable, Delay delay) {
-		if (started_) {
-			throw AlreadyStarted{};
+		if (started_.load()) {
+			// This safely allows the user to reuse the timer
+			// for a different callback or with a different
+			// delay.
+			stop();
 		}
-		started_ = true;
-		stopped_ = false;
+		started_.store(true);
 		// We need to pass the callable by value and not by
 		// reference since it will be called in another thread.
 		// Stop flag is passed by reference since this is passed
 		// as a pointer by default.
-		std::thread thr([=]() {
+		thread_ = std::thread([=]() {
 			std::this_thread::sleep_for(delay);
-			if (!this->stopped_) {
+			if (this->started_.load()) {
 				callable();
-				this->stopped_ = true;
+				this->started_.store(false);
 			}
 			});
-		thr.detach();
 	}
 
 	template<typename Callable, typename Period,
@@ -80,20 +88,17 @@ struct Timer
 		// We cannot stop the thread itself because we don't have
 		// any reference to it. Instead, we will let it know that
 		// it must not perform the requested action.
-		stopped_ = true;
+		started_.store(false);
+		if (thread_.joinable()) {
+			thread_.join();
+		}
 	}
 
-	// Necessary if we don't want to trigger the exception.
-	bool hasStarted() const {
-		return started_;
+	bool isRunning() const {
+		return started_.load();
 	}
 
 private:
-	// The stop flag does not have to be an atomic object to protect
-	// it from data races. The only possible conflict could happen
-	// when the timer is stopped right after starting it.
-	bool stopped_ = true;
-	// A separate flag has to be stored to prevent the user from
-	// scheduling another task.
-	bool started_ = false;
+	std::atomic<bool> started_;
+	std::thread thread_;
 };

@@ -47,7 +47,9 @@ This solution has two subprojects:
 
 ### To investigate
 
- * What will happen when the timer goes out of scope? Will a task be stopped?
+ * What will happen when the timer goes out of scope? Will a task (especially
+   the recurring task) be stopped?
+    * [Stack Overflow answer.](https://stackoverflow.com/questions/19744250/what-happens-to-a-detached-thread-when-main-exits)
 
 ### Other considered approaches
 

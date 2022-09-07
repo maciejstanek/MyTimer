@@ -51,6 +51,7 @@ int main()
 		std::cout << "Whoa, that was fast!\n";
 	}
 
+	/*
 	{
 		auto counter = 0;
 		const auto countedLambda = [&counter]() {
@@ -64,6 +65,7 @@ int main()
 		timer.stop();
 		std::cout << "Done. Called the lambda " << counter << " times.\n";
 	}
+	*/
 
 	{
 		Timer timer;
