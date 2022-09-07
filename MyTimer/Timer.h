@@ -83,6 +83,11 @@ struct Timer
 		stopped_ = true;
 	}
 
+	// Necessary if we don't want to trigger the exception.
+	bool hasStarted() const {
+		return started_;
+	}
+
 private:
 	// The stop flag does not have to be an atomic object to protect
 	// it from data races. The only possible conflict could happen

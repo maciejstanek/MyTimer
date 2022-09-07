@@ -37,3 +37,4 @@ TEST(Timer, PeriodicalPrecision) {
 
 // TODO: test stop for one shot and for periodical
 // TODO: test the one use exception
+// TODO: test hasStarted
