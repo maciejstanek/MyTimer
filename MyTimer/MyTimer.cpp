@@ -51,7 +51,6 @@ int main()
 		std::cout << "Whoa, that was fast!\n";
 	}
 
-	/*
 	{
 		auto counter = 0;
 		const auto countedLambda = [&counter]() {
@@ -65,11 +64,10 @@ int main()
 		timer.stop();
 		std::cout << "Done. Called the lambda " << counter << " times.\n";
 	}
-	*/
 
 	{
 		Timer timer;
-		std::cout << "\nWhat will happen if I return from main before the scheduled task is done?\n";
+		std::cout << "\nIs it safe to return from main before the scheduled task is done? No crash means yes.\n";
 		timer.callWithDelay(exampleCall, 1s);
 	}
 

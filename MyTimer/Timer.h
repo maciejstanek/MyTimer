@@ -15,6 +15,8 @@ namespace {
 	struct is_duration<std::chrono::duration<Rep, Period>> : std::true_type {};
 }
 
+// Attribution: https://www.fluentcpp.com/2018/12/28/timer-cpp/
+// Attribution: https://stackoverflow.com/questions/30425772/c-11-calling-a-c-function-periodically
 struct Timer
 {
 	Timer() : started_{ false } {}
@@ -34,20 +36,14 @@ struct Timer
 		typename std::enable_if < std::is_invocable<Callable>{}, bool > ::type = true,
 		typename std::enable_if < is_duration<Delay>{}, bool > ::type = true >
 	void callWithDelay(Callable callable, Delay delay) {
-		if (started_.load()) {
-			// This safely allows the user to reuse the timer
-			// for a different callback or with a different
-			// delay.
-			stop();
-		}
-		started_.store(true);
+		prepareForNewTask();
 		// We need to pass the callable by value and not by
 		// reference since it will be called in another thread.
 		// Stop flag is passed by reference since this is passed
 		// as a pointer by default.
 		thread_ = std::thread([=]() {
 			std::this_thread::sleep_for(delay);
-			if (this->started_.load()) {
+			if (this->isRunning()) {
 				callable();
 				this->started_.store(false);
 			}
@@ -58,11 +54,7 @@ struct Timer
 		typename std::enable_if < std::is_invocable<Callable>{}, bool > ::type = true,
 		typename std::enable_if < is_duration<Period>{}, bool > ::type = true >
 	void callWithPeriod(Callable callable, Period period) {
-		if (started_) {
-			throw AlreadyStarted{};
-		}
-		started_ = true;
-		stopped_ = false;
+		prepareForNewTask();
 		// The following approach has the unintended consequence
 		// that the period is always increased by the execution
 		// time of the callback and the following lambda. The
@@ -70,10 +62,10 @@ struct Timer
 		// detached thread so that we can immediately enter
 		// sleep_for again. On the other hand it might be too
 		// thread-intense. To investigate.
-		std::thread thr([=]() {
-			while (!this->stopped_) {
+		thread_ = std::thread([=]() {
+			while (this->isRunning()) {
 				std::this_thread::sleep_for(period);
-				if (this->stopped_) {
+				if (this->isHalted()) {
 					// Just stop in case the task was canceled
 					// during the wait.
 					return;
@@ -81,7 +73,6 @@ struct Timer
 				callable();
 			}
 			});
-		thr.detach();
 	}
 
 	void stop() {
@@ -97,8 +88,21 @@ struct Timer
 	bool isRunning() const {
 		return started_.load();
 	}
+	bool isHalted() const {
+		return !isRunning();
+	}
 
 private:
+	void prepareForNewTask() {
+		if (isRunning()) {
+			// This safely allows the user to reuse the timer
+			// for a different callback or with a different
+			// delay.
+			stop();
+		}
+		started_.store(true);
+	}
+
 	std::atomic<bool> started_;
 	std::thread thread_;
 };
